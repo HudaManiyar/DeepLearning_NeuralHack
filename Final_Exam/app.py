@@ -175,12 +175,15 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ── Load Model ─────────────────────────────────────────────────
+MODEL_PATH   = 'garbage_classifier.keras'
+RESULTS_PATH = 'training_history.json'
+
 @st.cache_resource
 def load_model_and_classes():
-    model_path   = 'garbage_classifier.h5'
+    model_path   = MODEL_PATH
     classes_path = 'class_names.json'
     if not os.path.exists(model_path):
-        return None, None, "Model file 'garbage_classifier.h5' not found."
+        return None, None, f"Model file '{MODEL_PATH}' not found."
     if not os.path.exists(classes_path):
         return None, None, "class_names.json not found."
     try:
@@ -192,6 +195,14 @@ def load_model_and_classes():
         return None, None, str(e)
 
 model, class_names, load_error = load_model_and_classes()
+
+# Metrics written by the training notebook (test-set results for both models)
+results = None
+if os.path.exists(RESULTS_PATH):
+    with open(RESULTS_PATH) as f:
+        results = json.load(f)
+selected_name = results['selected_model'] if results else 'Unknown'
+selected      = results['models'][selected_name] if results else None
 
 # ── Class Config ───────────────────────────────────────────────
 CLASS_COLORS = {
@@ -226,12 +237,11 @@ with st.sidebar:
     st.markdown("## Smart Waste Classifier")
     st.markdown("---")
     st.markdown("**Model Info**")
-    st.markdown("""
-    - **Architecture:** Custom CNN (4 Conv Blocks)
+    st.markdown(f"""
+    - **Architecture:** {selected_name}
     - **Input:** 224 x 224 RGB
     - **Output:** 6 waste categories
     - **Framework:** TensorFlow / Keras
-    - **Val Accuracy:** 70.58%
     """)
     st.markdown("---")
     st.markdown("**Classes**")
@@ -242,13 +252,11 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("**About**")
     st.markdown("Built for NeuralHack 2026 — Deep Learning Hackathon")
-    if os.path.exists('training_history.json'):
-        with open('training_history.json') as f:
-            hist = json.load(f)
+    if selected:
         st.markdown("---")
-        st.markdown("**Training Results**")
-        acc = hist.get('final_val_accuracy', 0) * 100
-        st.metric("Validation Accuracy", f"{acc:.1f}%")
+        st.markdown("**Results (held-out test set)**")
+        st.metric("Test Accuracy", f"{selected['test_accuracy'] * 100:.1f}%")
+        st.metric("Test Macro F1", f"{selected['test_macro_f1']:.3f}")
 
 # ── Main Header ────────────────────────────────────────────────
 st.markdown('<div class="hero-title">Smart Waste Classifier</div>', unsafe_allow_html=True)
@@ -256,7 +264,7 @@ st.markdown('<div class="hero-subtitle">CNN-powered garbage classification  |  N
 
 if load_error:
     st.error(f"Error: {load_error}")
-    st.info("Make sure garbage_classifier.h5 and class_names.json are in the same folder as app.py")
+    st.info(f"Make sure {MODEL_PATH} and class_names.json are in the same folder as app.py")
     st.stop()
 
 # ── Main Layout ────────────────────────────────────────────────
@@ -271,8 +279,8 @@ with col_upload:
     )
     if uploaded_file:
         image = Image.open(uploaded_file).convert('RGB')
-        st.image(image, caption="Uploaded image", use_container_width=True)
-        classify_btn = st.button("Classify Waste", use_container_width=True)
+        st.image(image, caption="Uploaded image", width='stretch')
+        classify_btn = st.button("Classify Waste", width='stretch')
     else:
         st.markdown("""
         <div class="upload-zone">
@@ -350,7 +358,7 @@ with col_result:
             margin=dict(l=10, r=60, t=10, b=10),
             height=280
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     elif not uploaded_file:
         st.markdown("""
@@ -360,106 +368,126 @@ with col_result:
         </div>
         """, unsafe_allow_html=True)
 
-# ── Architecture Section ───────────────────────────────────────
-st.markdown("---")
-st.markdown("#### CNN Architecture")
+# ── Model Comparison ───────────────────────────────────────────
+if results:
+    st.markdown("---")
+    st.markdown("#### Model Comparison")
+    split = results['split']
+    st.caption(f"Stratified split: {split['train']} train / {split['val']} validation / "
+               f"{split['test']} test images. Test images were never used for training or model selection.")
 
-a1, a2, a3, a4 = st.columns(4)
-for col, val, label in zip(
-    [a1, a2, a3, a4],
-    ['4', '6', '70.6%', '0.5'],
-    ['Conv Blocks', 'Output Classes', 'Val Accuracy', 'Dropout Rate']
-):
-    with col:
+    a1, a2, a3, a4 = st.columns(4)
+    for col, val, label in zip(
+        [a1, a2, a3, a4],
+        [selected_name, f"{selected['test_accuracy'] * 100:.1f}%",
+         f"{selected['test_macro_f1']:.3f}", f"{selected['parameters'] / 1e6:.2f}M"],
+        ['Deployed Model', 'Test Accuracy', 'Test Macro F1', 'Parameters']
+    ):
+        with col:
+            st.markdown(f"""
+            <div class="metric-card">
+                <div class="metric-value">{val}</div>
+                <div class="metric-label">{label}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    comparison = pd.DataFrame([
+        {'Model': name,
+         'Parameters': f"{m['parameters']:,}",
+         'Val. Accuracy': f"{m['val_accuracy'] * 100:.1f}%",
+         'Test Accuracy': f"{m['test_accuracy'] * 100:.1f}%",
+         'Test Macro F1': f"{m['test_macro_f1']:.3f}"}
+        for name, m in results['models'].items()
+    ])
+    st.dataframe(comparison, width='stretch', hide_index=True)
+
+    per_class = pd.DataFrame(
+        {name: [m['test_per_class_f1'][c] for c in results['class_names']]
+         for name, m in results['models'].items()},
+        index=[c.upper() for c in results['class_names']]
+    )
+    st.markdown("**Per-class F1 on the test set**")
+    st.dataframe(per_class.style.format('{:.3f}'), width='stretch')
+
+    # ── Training History ───────────────────────────────────────
+    st.markdown("---")
+    st.markdown("#### Training History")
+    hist_name = st.radio("Model", list(results['models'].keys()), horizontal=True,
+                         index=list(results['models'].keys()).index(selected_name))
+    hist_model = results['models'][hist_name]
+    hist_data  = hist_model['history']
+    epochs = list(range(1, len(hist_data['accuracy']) + 1))
+
+    def history_chart(title, train, val, train_color, val_color):
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=epochs, y=train, name='Train',
+                                 line=dict(color=train_color, width=2)))
+        fig.add_trace(go.Scatter(x=epochs, y=val, name='Validation',
+                                 line=dict(color=val_color, width=2, dash='dash')))
+        if 'fine_tune_start_epoch' in hist_model:
+            fig.add_vline(x=hist_model['fine_tune_start_epoch'] - 0.5, line_dash='dot',
+                          line_color='#7f8c8d', annotation_text='fine-tuning',
+                          annotation_font_color='#666')
+        fig.update_layout(
+            title=title,
+            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='#f8f9fa',
+            font=dict(color='#333'), height=260,
+            xaxis=dict(gridcolor='#e0e0e0', color='#666', title='Epoch'),
+            yaxis=dict(gridcolor='#e0e0e0', color='#666'),
+            margin=dict(l=10, r=10, t=40, b=10),
+            legend=dict(font=dict(color='#333'))
+        )
+        return fig
+
+    h1, h2 = st.columns(2)
+    with h1:
+        st.plotly_chart(history_chart('Accuracy', hist_data['accuracy'], hist_data['val_accuracy'],
+                                      '#2ecc71', '#3498db'), width='stretch')
+    with h2:
+        st.plotly_chart(history_chart('Loss', hist_data['loss'], hist_data['val_loss'],
+                                      '#e74c3c', '#f39c12'), width='stretch')
+
+    others = [n for n in results['models'] if n != selected_name]
+    if others:
+        base = results['models'][others[0]]
         st.markdown(f"""
-        <div class="metric-card">
-            <div class="metric-value">{val}</div>
-            <div class="metric-label">{label}</div>
+        <div class="analysis-box">
+            <b>Analysis:</b>
+            {selected_name} reached {selected['test_accuracy'] * 100:.1f}% test accuracy, compared with
+            {base['test_accuracy'] * 100:.1f}% for the {others[0]}. It was selected on validation accuracy;
+            the test set was used only once, for the final numbers shown here.
         </div>
         """, unsafe_allow_html=True)
 
-st.markdown("<br>", unsafe_allow_html=True)
+    with st.expander("Custom CNN architecture (baseline)"):
+        arch_data = {
+            'Layer':          ['Input', 'Conv2D + BN', 'MaxPool', 'Conv2D + BN', 'MaxPool',
+                               'Conv2D + BN', 'MaxPool', 'Conv2D + BN', 'MaxPool',
+                               'GlobalAvgPool', 'Dense + Dropout', 'Dense + Dropout', 'Output'],
+            'Filters/Units':  ['224x224x3', '32', '2x2', '64', '2x2',
+                               '128', '2x2', '256', '2x2',
+                               '-', '512 + p=0.5', '256 + p=0.3', '6'],
+            'Activation':     ['-', 'ReLU', '-', 'ReLU', '-',
+                               'ReLU', '-', 'ReLU', '-',
+                               '-', 'ReLU', 'ReLU', 'Softmax'],
+            'Regularization': ['-', 'L2 = 0.001', '-', 'L2 = 0.001', '-',
+                               'L2 = 0.001', '-', 'L2 = 0.001', '-',
+                               '-', 'Dropout', 'Dropout', '-']
+        }
+        st.dataframe(pd.DataFrame(arch_data), width='stretch', hide_index=True)
 
-arch_data = {
-    'Layer':          ['Input', 'Conv2D + BN', 'MaxPool', 'Conv2D + BN', 'MaxPool',
-                       'Conv2D + BN', 'MaxPool', 'Conv2D + BN', 'MaxPool',
-                       'GlobalAvgPool', 'Dense + Dropout', 'Dense + Dropout', 'Output'],
-    'Filters/Units':  ['224x224x3', '32', '2x2', '64', '2x2',
-                       '128', '2x2', '256', '2x2',
-                       '-', '512 + p=0.5', '256 + p=0.3', '6'],
-    'Activation':     ['-', 'ReLU', '-', 'ReLU', '-',
-                       'ReLU', '-', 'ReLU', '-',
-                       '-', 'ReLU', 'ReLU', 'Softmax'],
-    'Regularization': ['-', 'L2 = 0.001', '-', 'L2 = 0.001', '-',
-                       'L2 = 0.001', '-', 'L2 = 0.001', '-',
-                       '-', 'Dropout', 'Dropout', '-']
-}
-st.dataframe(pd.DataFrame(arch_data), use_container_width=True, hide_index=True)
-
-# ── Training History ───────────────────────────────────────────
-if os.path.exists('training_history.json'):
-    with open('training_history.json') as f:
-        hist_data = json.load(f)
-
-    st.markdown("---")
-    st.markdown("#### Training History — Custom CNN")
-
-    epochs = list(range(1, len(hist_data['accuracy']) + 1))
-    h1, h2 = st.columns(2)
-
-    with h1:
-        fig_acc = go.Figure()
-        fig_acc.add_trace(go.Scatter(x=epochs, y=hist_data['accuracy'],
-                                     name='Train',
-                                     line=dict(color='#2ecc71', width=2)))
-        fig_acc.add_trace(go.Scatter(x=epochs, y=hist_data['val_accuracy'],
-                                     name='Validation',
-                                     line=dict(color='#3498db', width=2, dash='dash')))
-        fig_acc.update_layout(
-            title='Accuracy',
-            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='#f8f9fa',
-            font=dict(color='#333'), height=260,
-            xaxis=dict(gridcolor='#e0e0e0', color='#666', title='Epoch'),
-            yaxis=dict(gridcolor='#e0e0e0', color='#666'),
-            margin=dict(l=10, r=10, t=40, b=10),
-            legend=dict(font=dict(color='#333'))
-        )
-        st.plotly_chart(fig_acc, use_container_width=True)
-
-    with h2:
-        fig_loss = go.Figure()
-        fig_loss.add_trace(go.Scatter(x=epochs, y=hist_data['loss'],
-                                      name='Train',
-                                      line=dict(color='#e74c3c', width=2)))
-        fig_loss.add_trace(go.Scatter(x=epochs, y=hist_data['val_loss'],
-                                      name='Validation',
-                                      line=dict(color='#f39c12', width=2, dash='dash')))
-        fig_loss.update_layout(
-            title='Loss',
-            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='#f8f9fa',
-            font=dict(color='#333'), height=260,
-            xaxis=dict(gridcolor='#e0e0e0', color='#666', title='Epoch'),
-            yaxis=dict(gridcolor='#e0e0e0', color='#666'),
-            margin=dict(l=10, r=10, t=40, b=10),
-            legend=dict(font=dict(color='#333'))
-        )
-        st.plotly_chart(fig_loss, use_container_width=True)
-
-    st.markdown("""
-    <div class="analysis-box">
-        <b>Analysis:</b>
-        Training accuracy reached 81.6% while validation peaked at 70.6% —
-        an 11% generalization gap indicating moderate overfitting.
-        The zigzag validation loss pattern is caused by high variance from the small
-        validation set (~500 images). This can be further improved using
-        Transfer Learning (MobileNetV2) or K-Fold Cross Validation.
-    </div>
-    """, unsafe_allow_html=True)
+    with st.expander("MobileNetV2 architecture (transfer learning)"):
+        st.dataframe(pd.DataFrame({
+            'Layer':  ['Input', 'Rescaling', 'MobileNetV2 base', 'GlobalAvgPool', 'Dropout', 'Output'],
+            'Detail': ['224x224x3 in [0, 1]', '[0, 1] to [-1, 1]', 'ImageNet weights; top 40 layers fine-tuned',
+                       '-', 'p = 0.3', 'Dense(6), Softmax'],
+        }), width='stretch', hide_index=True)
 
 # ── Footer ─────────────────────────────────────────────────────
 st.markdown("---")
 st.markdown("""
 <div style="text-align:center; color:#aaa; font-size:0.8rem; font-family: 'JetBrains Mono', monospace;">
-    NeuralHack 2026 — Deep Learning Hackathon  |  Custom CNN Waste Classification
+    NeuralHack 2026 — Deep Learning Hackathon  |  Custom CNN vs MobileNetV2 Waste Classification
 </div>
 """, unsafe_allow_html=True)

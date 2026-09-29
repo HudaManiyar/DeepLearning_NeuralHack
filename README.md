@@ -25,9 +25,11 @@ Improper waste disposal is a critical environmental challenge. Manual sorting of
 
 ---
 
-## Model Architecture
+## Models
 
-A Custom Convolutional Neural Network (CNN) trained from scratch using TensorFlow and Keras.
+Two models were trained and compared on the same data split.
+
+**1. Custom CNN (baseline)**, trained from scratch with TensorFlow/Keras:
 
 | Layer | Type | Filters / Units | Activation | Regularization |
 |---|---|---|---|---|
@@ -40,20 +42,51 @@ A Custom Convolutional Neural Network (CNN) trained from scratch using TensorFlo
 | Dense 2 | Dense + Dropout | 256, p=0.3 | ReLU | Dropout |
 | Output | Dense | 6 | Softmax | — |
 
-**Total Parameters:** 654,790  
-**Loss Function:** Categorical Cross-Entropy  
-**Optimizer:** Adam (lr = 0.001)
+654,790 parameters · Categorical cross-entropy · Adam (lr = 0.001)
+
+**2. MobileNetV2 (transfer learning)**, the deployed model:
+
+- MobileNetV2 base pretrained on ImageNet, followed by GlobalAveragePooling → Dropout(0.3) → Dense(6, Softmax)
+- **Phase 1:** base frozen, only the new head is trained (lr = 1e-3)
+- **Phase 2:** top 40 base layers fine-tuned at lr = 1e-5, with BatchNorm layers kept frozen
+- 2,265,670 parameters; the model rescales inputs internally, so it takes the same [0, 1] images as the CNN
+
+Both models use the same augmentation (flips, ±20° rotation, ±20% shift and zoom), early stopping on validation loss and learning-rate reduction on plateau.
 
 ---
 
 ## Results
 
-| Metric | Value |
-|---|---|
-| Training Accuracy | 81.62% |
-| Validation Accuracy | 70.58% |
-| Generalization Gap | 11.04% |
-| Sample Test (12 images) | 10/12 correct (83.3%) |
+The data is split **70% train / 15% validation / 15% test**, stratified by class. The validation set is used for early stopping and for choosing between the models; the **test set is used only once**, for the numbers below.
+
+| Model | Val. accuracy | **Test accuracy** | Test macro F1 |
+|---|---|---|---|
+| Custom CNN | 79.7% | **72.6%** | 0.706 |
+| **MobileNetV2** | 83.6% | **85.0%** | **0.820** |
+
+**Per-class F1 on the test set:**
+
+| Class | Custom CNN | MobileNetV2 | Test images |
+|---|---|---|---|
+| Cardboard | 0.864 | 0.875 | 60 |
+| Glass | 0.682 | 0.861 | 76 |
+| Metal | 0.586 | 0.824 | 62 |
+| Paper | 0.776 | 0.888 | 89 |
+| Plastic | 0.715 | 0.845 | 73 |
+| Trash | 0.611 | 0.625 | 20 |
+
+![Confusion matrices on the test set](Final_Exam/results/confusion_matrices.png)
+
+![Training curves](Final_Exam/results/training_curves.png)
+
+**Key findings**
+
+- Transfer learning improves test accuracy by **12.4 points** (72.6% → 85.0%). The largest gains are on glass, metal and plastic, which differ in subtle surface properties such as transparency and reflections.
+- Fine-tuning the top of MobileNetV2 lowered the best validation loss from 0.514 to 0.463.
+- The custom CNN scored 79.7% on validation but 72.6% on test. Its validation curve is noisy, so the epoch chosen by early stopping partly reflects luck on the validation set, which is why the final numbers come from a separate test set.
+- **Trash is the weakest class** for both models (F1 ≈ 0.6). It has only 137 images in total, and MobileNetV2 most often confuses it with metal or paper.
+
+> An earlier version of this project reported 70.58% *validation* accuracy with an 80/20 split, where the same validation set was also used for early stopping. The results above replace it.
 
 ---
 
@@ -61,11 +94,12 @@ A Custom Convolutional Neural Network (CNN) trained from scratch using TensorFlo
 
 ```
 Final_Exam/
-├── DL_ModelTraining.ipynb     # Complete training notebook (Google Colab)
+├── DL_ModelTraining.ipynb     # Training notebook: data split, both models, evaluation
 ├── app.py                     # Streamlit UI application
-├── garbage_classifier.h5      # Trained model weights
+├── garbage_classifier.keras   # Deployed model (MobileNetV2), native Keras format
 ├── class_names.json           # Class label mapping
-├── training_history.json      # Accuracy and loss data per epoch
+├── training_history.json      # Test metrics and training curves for both models
+├── results/                   # Confusion matrices, training curves, class distribution
 └── requirements.txt           # Pinned dependencies for the app
 ```
 
@@ -76,7 +110,8 @@ Final_Exam/
 **Garbage Classification Dataset** — Kaggle  
 - 2527 labeled images across 6 waste categories  
 - Source: https://www.kaggle.com/datasets/asdasdasasdas/garbage-classification  
-- Split: 80% training (2024 images) / 20% validation (503 images)
+- Split: 70% training (1,768) / 15% validation (379) / 15% test (380), stratified by class
+- Imbalanced: trash has 137 images, paper has 594
 
 ---
 
@@ -119,15 +154,16 @@ http://localhost:8501
 - Shows whether the item is **Recyclable** or **Non-Recyclable**
 - Displays a confidence bar chart across all 6 classes
 - Shows a disposal tip for the predicted category
-- Includes CNN architecture table and interactive training history plots
+- Compares both models on the test set (accuracy, macro F1, per-class F1)
+- Interactive training history plots for each model
 
 ---
 
 ## Future Improvements
 
-- Transfer Learning using MobileNetV2 — expected to improve accuracy to 85-92%
-- K-Fold Cross Validation to reduce validation instability
-- Collect more Trash and Plastic images to address class imbalance
+- K-fold cross-validation for a more stable estimate (the test set has only 20 trash images)
+- Class weighting or more trash images to improve the weakest class
+- Deploy the Streamlit app publicly
 
 ---
 
@@ -153,3 +189,5 @@ The [`LABS/`](LABS/) folder contains all practical exercises completed during th
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.55-brightgreen)
 ![Plotly](https://img.shields.io/badge/Plotly-5.x-blue)
 ![Colab](https://img.shields.io/badge/Google_Colab-T4_GPU-yellow)
+
+The notebook runs on Google Colab (GPU recommended). The saved outputs in the notebook come from a CPU run with TensorFlow 2.19.
