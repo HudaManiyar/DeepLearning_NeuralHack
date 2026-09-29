@@ -65,7 +65,8 @@ Final_Exam/
 ├── app.py                     # Streamlit UI application
 ├── garbage_classifier.h5      # Trained model weights
 ├── class_names.json           # Class label mapping
-└── training_history.json      # Accuracy and loss data per epoch
+├── training_history.json      # Accuracy and loss data per epoch
+└── requirements.txt           # Pinned dependencies for the app
 ```
 
 ---
@@ -83,8 +84,8 @@ Final_Exam/
 
 **1. Clone the repository**
 ```bash
-git clone https://github.com/HudaManiyar/Deep-Learning.git
-cd Deep-Learning/Final_Exam
+git clone https://github.com/HudaManiyar/DeepLearning_NeuralHack.git
+cd DeepLearning_NeuralHack/Final_Exam
 ```
 
 **2. Create and activate a virtual environment**
@@ -96,7 +97,7 @@ source dl_env/bin/activate     # Mac/Linux
 
 **3. Install dependencies**
 ```bash
-pip install streamlit tensorflow pillow plotly pandas
+pip install -r requirements.txt
 ```
 
 **4. Run the app**

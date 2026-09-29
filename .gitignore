@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+dl_env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Secrets and credentials
+.env
+kaggle.json
+.streamlit/secrets.toml
+
+# Datasets (download from Kaggle; see README)
+data/
+dataset/
+Garbage classification/
+*.zip
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
