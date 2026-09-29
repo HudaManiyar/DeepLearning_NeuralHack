@@ -132,14 +132,15 @@ http://localhost:8501
 
 ## Labs
 
-The `LABS/` folder contains all practical exercises completed during the Deep Learning course covering:
+The [`LABS/`](LABS/) folder contains all practical exercises completed during the Deep Learning course, each with its own README explaining the method and results:
 
-- Multi-Layer Perceptron (MLP) in Keras
-- Deep Feedforward Networks
-- L1 and L2 Regularization
-- Convolutional Neural Networks
-- LSTM (Long Short-Term Memory)
-- Sparse and Contractive Autoencoders
+- **Lab 1:** Multi-Layer Perceptron for XOR in Keras, PyTorch and TensorFlow
+- **Lab 2:** Deep feedforward network on Fashion-MNIST, with depth and activation experiments
+- **Lab 3:** L1, L2 and Elastic Net regularisation
+- **Lab 4:** CNN from scratch; YOLOv5 vs YOLOv8 object detection with a Weighted Box Fusion ensemble
+- **Lab 5:** Next-word text generation with RNN and LSTM
+- **Lab 6:** Sparse autoencoder on CIFAR-10
+- **Lab 7:** Variational autoencoder on MNIST
 
 ---
 
