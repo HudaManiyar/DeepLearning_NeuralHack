@@ -1,0 +1,8 @@
+# Streamlit app dependencies. Python 3.10–3.12 (TensorFlow 2.19 does not support 3.13).
+# TensorFlow is pinned to the version the model (garbage_classifier.h5) was trained with.
+tensorflow==2.19.0
+streamlit==1.55.0
+plotly>=5,<7
+pandas>=2.0
+numpy>=1.26,<2.2
+pillow>=10.0
