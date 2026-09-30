@@ -5,7 +5,9 @@ A deep learning system that classifies garbage images into 6 waste categories an
 Built as the final project for the Deep Learning course of the MSc in Artificial Intelligence & Machine Learning. The course labs are in [`DeepLearning/`](DeepLearning/).
 
 
-![Smart Waste Classifier app classifying a glass bottle from the test set](WasteClassifier/results/app_screenshot.png)
+![Demo: the app classifying four held-out test images](WasteClassifier/results/demo.gif)
+
+[Full demo video (MP4, 55 s)](WasteClassifier/results/demo.mp4): predictions, model comparison and training curves.
 
 ---
 
@@ -94,7 +96,7 @@ WasteClassifier/
 ├── garbage_classifier.keras   # Deployed model (MobileNetV2), native Keras format
 ├── class_names.json           # Class label mapping
 ├── training_history.json      # Test metrics and training curves for both models
-├── results/                   # Confusion matrices, training curves, app screenshot
+├── results/                   # Confusion matrices, training curves, app screenshot and demo
 └── requirements.txt           # Pinned dependencies for the app
 ```
 
@@ -143,6 +145,8 @@ http://localhost:8501
 ---
 
 ## UI Features
+
+![Smart Waste Classifier app classifying a glass bottle from the test set](WasteClassifier/results/app_screenshot.png)
 
 - Upload any image of a waste item
 - Displays predicted waste category with confidence percentage
