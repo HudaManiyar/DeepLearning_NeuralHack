@@ -5,9 +5,7 @@ A deep learning system that classifies garbage images into 6 waste categories an
 Built as the final project for the Deep Learning course of the MSc in Artificial Intelligence & Machine Learning. The course labs are in [`DeepLearning/`](DeepLearning/).
 
 
-![Demo: the app classifying four held-out test images](WasteClassifier/results/demo.gif)
-
-[Full demo video (MP4, 55 s)](WasteClassifier/results/demo.mp4): predictions, model comparison and training curves.
+![Smart Waste Classifier app classifying a glass bottle from the test set](WasteClassifier/results/app_screenshot.png)
 
 ---
 
@@ -146,8 +144,6 @@ http://localhost:8501
 
 ## UI Features
 
-![Smart Waste Classifier app classifying a glass bottle from the test set](WasteClassifier/results/app_screenshot.png)
-
 - Upload any image of a waste item
 - Displays predicted waste category with confidence percentage
 - Shows whether the item is **Recyclable** or **Non-Recyclable**
@@ -155,6 +151,16 @@ http://localhost:8501
 - Shows a disposal tip for the predicted category
 - Compares both models on the test set (accuracy, macro F1, per-class F1)
 - Interactive training history plots for each model
+
+---
+
+## Demo
+
+The app classifying four images from the held-out test set:
+
+![Demo: the app classifying four held-out test images](WasteClassifier/results/demo.gif)
+
+[Full demo video (MP4, 55 s)](WasteClassifier/results/demo.mp4): predictions, model comparison and training curves.
 
 ---
 
