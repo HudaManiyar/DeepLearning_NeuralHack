@@ -94,7 +94,7 @@ WasteClassifier/
 ├── garbage_classifier.keras   # Deployed model (MobileNetV2), native Keras format
 ├── class_names.json           # Class label mapping
 ├── training_history.json      # Test metrics and training curves for both models
-├── results/                   # Confusion matrices, training curves, app screenshot
+├── results/                   # Confusion matrices, training curves, app screenshot and demo
 └── requirements.txt           # Pinned dependencies for the app
 ```
 
@@ -151,6 +151,16 @@ http://localhost:8501
 - Shows a disposal tip for the predicted category
 - Compares both models on the test set (accuracy, macro F1, per-class F1)
 - Interactive training history plots for each model
+
+---
+
+## Demo
+
+The app classifying four images from the held-out test set:
+
+![Demo: the app classifying four held-out test images](WasteClassifier/results/demo.gif)
+
+[Full demo video (MP4, 55 s)](WasteClassifier/results/demo.mp4): predictions, model comparison and training curves.
 
 ---
 
