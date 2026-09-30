@@ -1,6 +1,8 @@
 # Deep Learning Labs
 
-Practical exercises from an MSc Deep Learning course, progressing from a single hidden layer to generative models. Each folder has the notebook and a README explaining the aim, method, results and takeaways.
+**Course:** Deep Learning — MSc Artificial Intelligence & Machine Learning
+
+Practical exercises from the course, progressing from a single hidden layer to generative models. Each folder has the notebook and a README explaining the aim, method, results and takeaways.
 
 | Lab | Topic | Dataset | Framework | Headline result |
 |---|---|---|---|---|

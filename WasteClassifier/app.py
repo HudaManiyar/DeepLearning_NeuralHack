@@ -251,7 +251,7 @@ with st.sidebar:
             st.markdown(f"- **{cls.upper()}** — {status}")
     st.markdown("---")
     st.markdown("**About**")
-    st.markdown("Built for NeuralHack 2026 — Deep Learning Hackathon")
+    st.markdown("Final project — Deep Learning course, MSc AI & ML")
     if selected:
         st.markdown("---")
         st.markdown("**Results (held-out test set)**")
@@ -260,7 +260,7 @@ with st.sidebar:
 
 # ── Main Header ────────────────────────────────────────────────
 st.markdown('<div class="hero-title">Smart Waste Classifier</div>', unsafe_allow_html=True)
-st.markdown('<div class="hero-subtitle">CNN-powered garbage classification  |  NeuralHack 2026  </div>', unsafe_allow_html=True)
+st.markdown('<div class="hero-subtitle">Deep learning waste classification  |  Custom CNN vs MobileNetV2</div>', unsafe_allow_html=True)
 
 if load_error:
     st.error(f"Error: {load_error}")
@@ -488,6 +488,6 @@ if results:
 st.markdown("---")
 st.markdown("""
 <div style="text-align:center; color:#aaa; font-size:0.8rem; font-family: 'JetBrains Mono', monospace;">
-    NeuralHack 2026 — Deep Learning Hackathon  |  Custom CNN vs MobileNetV2 Waste Classification
+    Smart Waste Classifier  |  Custom CNN vs MobileNetV2
 </div>
 """, unsafe_allow_html=True)
