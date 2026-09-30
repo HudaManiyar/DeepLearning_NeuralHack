@@ -1,13 +1,8 @@
-# Deep Learning 
-### MSc. Artificial Intelligence & Machine Learning
+# Smart Waste Classifier
 
----
+A deep learning system that classifies garbage images into 6 waste categories and determines whether the item is recyclable or non-recyclable. It compares a custom CNN trained from scratch with MobileNetV2 transfer learning, and serves the better model in a Streamlit app.
 
-## Final Exam — NeuralHack 2026
-
-### Smart Garbage Classification System
-
-A deep learning system that classifies garbage images into 6 waste categories and determines whether the item is recyclable or non-recyclable. Built as part of the NeuralHack 2026 hackathon examination for the Deep Learning course.
+Built as the final project for the Deep Learning course of the MSc in Artificial Intelligence & Machine Learning. The course labs are in [`DeepLearning/`](DeepLearning/).
 
 
 <img width="1163" height="517" alt="image" src="https://github.com/user-attachments/assets/eaef9e1a-b839-4037-940c-16f3247bc106" />
@@ -75,9 +70,9 @@ The data is split **70% train / 15% validation / 15% test**, stratified by class
 | Plastic | 0.715 | 0.845 | 73 |
 | Trash | 0.611 | 0.625 | 20 |
 
-![Confusion matrices on the test set](Final_Exam/results/confusion_matrices.png)
+![Confusion matrices on the test set](WasteClassifier/results/confusion_matrices.png)
 
-![Training curves](Final_Exam/results/training_curves.png)
+![Training curves](WasteClassifier/results/training_curves.png)
 
 **Key findings**
 
@@ -93,7 +88,7 @@ The data is split **70% train / 15% validation / 15% test**, stratified by class
 ## Project Structure
 
 ```
-Final_Exam/
+WasteClassifier/
 ├── DL_ModelTraining.ipynb     # Training notebook: data split, both models, evaluation
 ├── app.py                     # Streamlit UI application
 ├── garbage_classifier.keras   # Deployed model (MobileNetV2), native Keras format
@@ -119,8 +114,8 @@ Final_Exam/
 
 **1. Clone the repository**
 ```bash
-git clone https://github.com/HudaManiyar/DeepLearning_NeuralHack.git
-cd DeepLearning_NeuralHack/Final_Exam
+git clone https://github.com/HudaManiyar/Smart-Waste-Classifier.git
+cd Smart-Waste-Classifier/WasteClassifier
 ```
 
 **2. Create and activate a virtual environment**
@@ -167,9 +162,9 @@ http://localhost:8501
 
 ---
 
-## Labs
+## Deep Learning Labs
 
-The [`LABS/`](LABS/) folder contains all practical exercises completed during the Deep Learning course, each with its own README explaining the method and results:
+The [`DeepLearning/`](DeepLearning/) folder contains the practical exercises from the Deep Learning course (MSc Artificial Intelligence & Machine Learning), each with its own README explaining the method and results:
 
 - **Lab 1:** Multi-Layer Perceptron for XOR in Keras, PyTorch and TensorFlow
 - **Lab 2:** Deep feedforward network on Fashion-MNIST, with depth and activation experiments
